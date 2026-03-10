@@ -1,0 +1,38 @@
+name: 'VEXLIT Security Scan'
+description: 'Scan your code for security vulnerabilities with VEXLIT'
+branding:
+  icon: 'shield'
+  color: 'red'
+inputs:
+  format:
+    description: 'Output format (table, json, sarif)'
+    required: false
+    default: 'sarif'
+  output:
+    description: 'Output file path'
+    required: false
+    default: 'results.sarif'
+  fail-on:
+    description: 'Fail on severity level (critical, high, medium, low)'
+    required: false
+  path:
+    description: 'Directory to scan'
+    required: false
+    default: '.'
+runs:
+  using: 'composite'
+  steps:
+    - name: Install VEXLIT CLI
+      shell: bash
+      run: npm install -g @vexlit/cli
+    - name: Run Security Scan
+      shell: bash
+      run: |
+        ARGS="scan ${{ inputs.path }} --format ${{ inputs.format }}"
+        if [ -n "${{ inputs.output }}" ]; then
+          ARGS="$ARGS -o ${{ inputs.output }}"
+        fi
+        if [ -n "${{ inputs.fail-on }}" ]; then
+          ARGS="$ARGS --fail-on ${{ inputs.fail-on }}"
+        fi
+        vexlit $ARGS
