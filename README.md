@@ -62,7 +62,7 @@ jobs:
 
 ## Documentation
 
-Full documentation at [vexlit.com/docs](https://vexlit.com/docs)
+Full documentation at [www.vexlit.com/docs](https://www.vexlit.com/docs)
 
 ## License
 
