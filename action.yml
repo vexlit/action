@@ -19,13 +19,22 @@ inputs:
     description: 'Directory to scan'
     required: false
     default: '.'
+outputs:
+  exit-code:
+    description: 'CLI exit code (0=clean, 1=vulnerabilities found, 2=error)'
+    value: ${{ steps.scan.outputs.exit_code }}
+  sarif-file:
+    description: 'Path to the SARIF output file'
+    value: ${{ inputs.output }}
 runs:
   using: 'composite'
   steps:
     - name: Install VEXLIT CLI
       shell: bash
       run: npm install -g @vexlit/cli
+
     - name: Run Security Scan
+      id: scan
       shell: bash
       run: |
         ARGS="scan ${{ inputs.path }} --format ${{ inputs.format }}"
@@ -35,4 +44,45 @@ runs:
         if [ -n "${{ inputs.fail-on }}" ]; then
           ARGS="$ARGS --fail-on ${{ inputs.fail-on }}"
         fi
-        vexlit $ARGS
+
+        set +e
+        OUTPUT=$(vexlit $ARGS 2>&1)
+        EXIT_CODE=$?
+        set -e
+
+        echo "$OUTPUT"
+        echo "exit_code=$EXIT_CODE" >> "$GITHUB_OUTPUT"
+
+        if [ $EXIT_CODE -eq 0 ]; then
+          echo ""
+          echo "✅ VEXLIT: No vulnerabilities found above threshold — scan passed."
+        elif [ $EXIT_CODE -eq 1 ]; then
+          # Parse vulnerability counts from output
+          TOTAL=$(echo "$OUTPUT" | grep -oP '\d+ vulnerabilit' | head -1 | grep -oP '^\d+' || echo "")
+          CRITICAL=$(echo "$OUTPUT" | grep -ioP '\d+\s*critical' | head -1 | grep -oP '^\d+' || echo "0")
+          HIGH=$(echo "$OUTPUT" | grep -ioP '\d+\s*high' | head -1 | grep -oP '^\d+' || echo "0")
+
+          echo ""
+          echo "============================================================"
+          echo "❌ VEXLIT: Security vulnerabilities detected"
+          if [ -n "$TOTAL" ]; then
+            echo "   Found: ${TOTAL} vulnerabilities (${CRITICAL} Critical, ${HIGH} High)"
+          fi
+          THRESHOLD="${{ inputs.fail-on }}"
+          if [ -z "$THRESHOLD" ]; then
+            THRESHOLD="critical"
+          fi
+          echo "   Threshold: --fail-on ${THRESHOLD}"
+          if [ -n "${{ inputs.output }}" ]; then
+            echo "   Results: ${{ inputs.output }}"
+          fi
+          echo "============================================================"
+          exit 1
+        else
+          echo ""
+          echo "============================================================"
+          echo "⚠️ VEXLIT: Scan encountered an error (exit code $EXIT_CODE)"
+          echo "   Please check the logs above for details."
+          echo "============================================================"
+          exit $EXIT_CODE
+        fi
