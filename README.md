@@ -66,7 +66,7 @@ When vulnerabilities are found, the action prints a clear summary:
 - **Automatic PR Annotations** — Vulnerability findings appear as inline comments on pull requests
 - **SARIF Upload** — Results integrate with GitHub's Security tab
 - **Configurable Severity Gates** — Block merges on critical vulnerabilities
-- **524+ Security Rules** — Covering OWASP Top 10 across 34 languages
+- **6,200+ Security Rules** — Covering OWASP Top 10 across 34 languages
 - **Fast** — Average scan time under 3 seconds
 
 ## Examples
