@@ -101,7 +101,7 @@ When vulnerabilities are found, the action prints a clear summary:
 
 ## Documentation
 
-Full documentation at [www.vexlit.com/docs](https://www.vexlit.com/docs)
+Full documentation at [vexlit.ai/docs](https://vexlit.ai/docs)
 
 ## License
 
